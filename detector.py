@@ -1,3 +1,8 @@
+'''
+Tool that takes a pcap file and SYN/SYN+ACK packet ratio to search for IP addresses
+suspected of port scanning attacks. Checks only TCP ethernet packets. 
+'''
+
 import sys 
 import socket 
 import argparse
@@ -11,7 +16,7 @@ def run(args):
     ip_flag_dict = create_IP_TCP_flag_dict( pcapReader )
     suspected_scanner_ip_list = create_suspect_IP_list(ip_flag_dict, args['ratio'])
     if len(suspected_scanner_ip_list):
-        print('IP addresses likely to be preforming SYN Scan attacks' \
+        print('IP addresses likely to be preforming SYN Scan attacks ' \
              f'based on {args["ratio"]} to 1 ratio of SYN to SYN+ACK TCP packets:')
         print (suspected_scanner_ip_list)
     else:
@@ -31,28 +36,25 @@ def create_IP_TCP_flag_dict( pcapReader ):
             eth = dpkt.ethernet.Ethernet(buf)
         except: 
             continue
-        # Filter for Ethernet Packets
         if eth.type != dpkt.ethernet.ETH_TYPE_IP:
             continue
         ip = eth.data
-        # Filter for TCP packets
         if ip.p != dpkt.ip.IP_PROTO_TCP:
             continue
 
         tcp = ip.data
-
+        # If IP is sending SYN packet, increment SYN count
         if( (tcp.flags & dpkt.tcp.TH_SYN) and not (tcp.flags & dpkt.tcp.TH_ACK)):
             if ip_flag_dict.get(ip.src) is None: 
                 ip_flag_dict[ip.src] = [1,0]
             else: 
-                SYN_count = ip_flag_dict[ip.src][0]
-                ip_flag_dict[ip.src][0]  = SYN_count+1
+                ip_flag_dict[ip.src][0] +=1
+         # If IP is receiving SYN+ACK packet, increment SYN+ACK count
         elif( (tcp.flags & dpkt.tcp.TH_SYN) and (tcp.flags & dpkt.tcp.TH_ACK) ):
             if ip_flag_dict.get(ip.dst) is None: 
                 ip_flag_dict[ip.dst] = [0,1]
             else:
-                SYN_ACK_count = ip_flag_dict[ip.dst][1]
-                ip_flag_dict[ip.dst][1] = SYN_ACK_count+1
+                ip_flag_dict[ip.dst][1] +=1
     return ip_flag_dict
 
 
