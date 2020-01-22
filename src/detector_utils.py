@@ -1,28 +1,9 @@
-'''
-Tool that takes a pcap file and SYN/SYN+ACK packet ratio to search for IP addresses
-suspected of port scanning attacks. Checks only TCP ethernet packets. 
-'''
-
-import sys 
-import socket 
-import argparse
+"""
+Utility functions for detecting TCP port scanning attacks.
+"""
+import socket
 
 import dpkt
-
-def run(args):
-    pcapFile = open(args['pcapfile'], 'rb')
-    pcapReader = dpkt.pcap.Reader(pcapFile)
-
-    ip_flag_dict = create_IP_TCP_flag_dict( pcapReader )
-    suspected_scanner_ip_list = create_suspect_IP_list(ip_flag_dict, args['ratio'])
-    if len(suspected_scanner_ip_list):
-        print('IP addresses likely to be preforming SYN Scan attacks ' \
-             f'based on {args["ratio"]} to 1 ratio of SYN to SYN+ACK TCP packets:')
-        print (suspected_scanner_ip_list)
-    else:
-        print ('No SYN scan atttacks detected in TCP/Ethernet packets '  \
-              f'for SYN/SYN+ACK ratio of {args["ratio"]}')
-    
 
 
 def create_IP_TCP_flag_dict( pcapReader ):
@@ -66,22 +47,10 @@ def create_suspect_IP_list(ip_flag_dict, suspect_ratio):
     ip_scanner_list = []
     for ip in ip_flag_dict:
         if ip_flag_dict[ip][0]> suspect_ratio*ip_flag_dict[ip][1] and ip_flag_dict[ip][0]>0:
-            ip_scanner_list.append(IP_to_str(ip))
+            ip_scanner_list.append(__IP_to_str(ip))
     return ip_scanner_list
 
 
-def IP_to_str(ip): 
+def __IP_to_str(ip): 
     """ convert ip returned by dpkt to human readable string """
     return socket.inet_ntop(socket.AF_INET, ip)
- 
-
-if __name__ == '__main__':
-    arg_parser = argparse.ArgumentParser(description='syn scan detector for pcap network files')
-    arg_parser.add_argument('--pcapfile', nargs='?', default=None, required=True, 
-        help='pcap input file required')
-    arg_parser.add_argument('--ratio', nargs='?', default=3, required=False, 
-        help='ratio of SYNs to SYN+ACKs sent for an IP address to qualify as suspected attacker')
-    
-    args = vars(arg_parser.parse_args())
-    run(args)
-
