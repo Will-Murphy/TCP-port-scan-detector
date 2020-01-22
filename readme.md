@@ -14,10 +14,11 @@ cd in **src/**
 usage: main --detector.py [-h] --pcapfile [PCAPFILE] [--ratio [RATIO]]
 
 syn scan detector for pcap network files
-
+```
 optional arguments:
   -h, --help            show this help message and exit
   --pcapfile [PCAPFILE]
                         pcap input file required
   --ratio [RATIO]       ratio of SYNs to SYN+ACKs sent for an IP address to
                         qualify as suspected attacker
+```
