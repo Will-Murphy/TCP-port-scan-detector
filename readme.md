@@ -13,8 +13,8 @@ cd in **src/**
 
 usage: main --detector.py [-h] --pcapfile [PCAPFILE] [--ratio [RATIO]]
 
-syn scan detector for pcap network files
 ```
+syn scan detector for pcap network files
 optional arguments:
   -h, --help            show this help message and exit
   --pcapfile [PCAPFILE]
